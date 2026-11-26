@@ -1,10 +1,12 @@
 
 #include "ProcessCommandLine.hpp"
+#include "RunCaesarCipher.hpp"
 #include "TransformChar.hpp"
 
 #include <cctype>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -26,18 +28,21 @@ int main(int argc, char* argv[])
         processCommandLine(cmdLineArgs, helpRequested, versionRequested,
                            inputFile, outputFile, encrypt, cipherkey)};
 
-    // Any failure in the argument processing means we can't continue
-    // Use a non-zero return value to indicate failure
+    // Check that the command-line processing was successful
     if (!cmdLineStatus) {
         return 1;
     }
 
     // Handle help, if requested
     if (helpRequested) {
-        // Line splitting for readability
         std::cout
-            << "Usage: mpags-cipher [-h/--help] [--version] [-i <file>] [-o <file>]\n\n"
-            << "Encrypts/Decrypts input alphanumeric text using classical ciphers\n\n"
+            << "Usage: mpags-cipher [-h/--help] [--version] "
+            << "[-i <file>] [-o <file>] "
+            << "[--encrypt/--decrypt] [--key <key>]\n\n"
+
+            << "Encrypts/Decrypts input alphanumeric text "
+            << "using classical ciphers\n\n"
+
             << "Available options:\n\n"
             << "  -h|--help        Print this help message and exit\n\n"
             << "  --version        Print version information\n\n"
@@ -45,9 +50,13 @@ int main(int argc, char* argv[])
             << "                   Stdin will be used if not supplied\n\n"
             << "  -o FILE          Write processed text to FILE\n"
             << "                   Stdout will be used if not supplied\n\n"
-            << "  --encrypt         Encrypt the input text (default)\n\n"
-            << "  --decrypt         Decrypt the input text\n"
-            << "  --key KEY         Use KEY as the cipher key\n"
+
+            << "  --encrypt        Encrypt the input text (default)\n\n"
+
+            << "  --decrypt        Decrypt the input text\n\n"
+
+            << "  --key KEY        Specify the cipher key (0-25)\n\n"
+
             << std::endl;
 
         return 0;
@@ -59,12 +68,35 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    // Convert the cipher key from a string to an integer
+    std::size_t key{0};
+
+    try {
+        std::size_t position{0};
+
+        const unsigned long convertedKey{std::stoul(cipherkey, &position)};
+
+        // Check that the key is a valid integer between 0 and 25
+        if (cipherkey.empty() ||
+            cipherkey.find_first_not_of("0123456789") != std::string::npos ||
+            position != cipherkey.size() || convertedKey > 25) {
+            std::cerr << "[error] Caesar cipher key must be "
+                      << "an integer between 0 and 25\n";
+            return 1;
+        }
+
+        key = static_cast<std::size_t>(convertedKey);
+
+    } catch (const std::exception&) {
+        std::cerr << "[error] Invalid or missing cipher key\n";
+        return 1;
+    }
+
     // Initialise variables
     char inputChar{'x'};
     std::string inputText;
 
     // Read in user input from stdin/file
-    // Exercise 7.1
     if (!inputFile.empty()) {
         // Open the input file
         std::ifstream inFile{inputFile};
@@ -88,7 +120,10 @@ int main(int argc, char* argv[])
         }
     }
 
-    // Write the transliterated text to a file or stdout
+    // Run the Caesar cipher on the transliterated text
+    const std::string outputText{runCaesarCipher(inputText, key, encrypt)};
+
+    // Write the encrypted/decrypted text to a file or stdout
     if (!outputFile.empty()) {
         // Open the output file
         std::ofstream outFile{outputFile};
@@ -100,12 +135,12 @@ int main(int argc, char* argv[])
             return 1;
         }
 
-        // Write the processed text to the output file
-        outFile << inputText << std::endl;
+        // Write the cipher output to the output file
+        outFile << outputText << std::endl;
 
     } else {
-        // Print the transliterated text to the screen
-        std::cout << inputText << std::endl;
+        // Print the cipher output to the screen
+        std::cout << outputText << std::endl;
     }
 
     // Return zero to indicate successful execution
