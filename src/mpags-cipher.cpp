@@ -18,10 +18,12 @@ int main(int argc, char* argv[])
     bool versionRequested{false};
     std::string inputFile{""};
     std::string outputFile{""};
+    bool encrypt{true};
 
     // Process command line arguments
-    const bool cmdLineStatus{processCommandLine(
-        cmdLineArgs, helpRequested, versionRequested, inputFile, outputFile)};
+    const bool cmdLineStatus{processCommandLine(cmdLineArgs, helpRequested,
+                                                versionRequested, inputFile,
+                                                outputFile, encrypt)};
 
     // Any failure in the argument processing means we can't continue
     // Use a non-zero return value to indicate failure
@@ -42,6 +44,8 @@ int main(int argc, char* argv[])
             << "                   Stdin will be used if not supplied\n\n"
             << "  -o FILE          Write processed text to FILE\n"
             << "                   Stdout will be used if not supplied\n\n"
+            << "  --encrypt         Encrypt the input text (default)\n\n"
+            << "  --decrypt         Decrypt the input text\n"
             << std::endl;
 
         return 0;

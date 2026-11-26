@@ -6,7 +6,8 @@
 
 bool processCommandLine(const std::vector<std::string>& cmdLineArgs,
                         bool& helpRequested, bool& versionRequested,
-                        std::string& inputFile, std::string& outputFile)
+                        std::string& inputFile, std::string& outputFile,
+                        bool& encrypt)
 {
     // Status flag to indicate whether or not the parsing was successful
     bool processStatus{true};
@@ -51,6 +52,10 @@ bool processCommandLine(const std::vector<std::string>& cmdLineArgs,
                 outputFile = cmdLineArgs[i + 1];
                 ++i;
             }
+        } else if (cmdLineArgs[i] == "--encrypt") {
+            encrypt = true;
+        } else if (cmdLineArgs[i] == "--decrypt") {
+            encrypt = false;
         } else {
             // Have encoutered an unknown flag, output an error message,
             // set the flag to indicate the error and terminate the loop
