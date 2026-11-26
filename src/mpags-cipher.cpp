@@ -1,7 +1,9 @@
+
 #include "ProcessCommandLine.hpp"
 #include "TransformChar.hpp"
 
 #include <cctype>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -41,14 +43,11 @@ int main(int argc, char* argv[])
             << "  -o FILE          Write processed text to FILE\n"
             << "                   Stdout will be used if not supplied\n\n"
             << std::endl;
-        // Help requires no further action, so return from main
-        // with 0 used to indicate success
+
         return 0;
     }
 
     // Handle version, if requested
-    // Like help, requires no further action,
-    // so return from main with zero to indicate success
     if (versionRequested) {
         std::cout << "0.1.0" << std::endl;
         return 0;
@@ -59,28 +58,50 @@ int main(int argc, char* argv[])
     std::string inputText;
 
     // Read in user input from stdin/file
-    // Warn that input file option not yet implemented
+    // Exercise 7.1
     if (!inputFile.empty()) {
-        std::cerr << "[warning] input from file ('" << inputFile
-                  << "') not implemented yet, using stdin\n";
+        // Open the input file
+        std::ifstream inFile{inputFile};
+
+        // Check that the file opened correctly
+        if (!inFile.good()) {
+            std::cerr << "[error] Unable to open input file: " << inputFile
+                      << std::endl;
+            return 1;
+        }
+
+        // Loop over each character from the input file
+        while (inFile >> inputChar) {
+            inputText += transformChar(inputChar);
+        }
+
+    } else {
+        // Loop over each character from user input
+        while (std::cin >> inputChar) {
+            inputText += transformChar(inputChar);
+        }
     }
 
-    // loop over each character from user input
-    while (std::cin >> inputChar) {
-        inputText += transformChar(inputChar);
-    }
-
-    // Print out the transliterated text
-
-    // Warn that output file option not yet implemented
+    // Write the transliterated text to a file or stdout
     if (!outputFile.empty()) {
-        std::cerr << "[warning] output to file ('" << outputFile
-                  << "') not implemented yet, using stdout\n";
+        // Open the output file
+        std::ofstream outFile{outputFile};
+
+        // Check that the file opened correctly
+        if (!outFile.good()) {
+            std::cerr << "[error] Unable to open output file: " << outputFile
+                      << std::endl;
+            return 1;
+        }
+
+        // Write the processed text to the output file
+        outFile << inputText << std::endl;
+
+    } else {
+        // Print the transliterated text to the screen
+        std::cout << inputText << std::endl;
     }
 
-    std::cout << inputText << std::endl;
-
-    // No requirement to return from main, but we do so for clarity
-    // and for consistency with other functions
+    // Return zero to indicate successful execution
     return 0;
 }
