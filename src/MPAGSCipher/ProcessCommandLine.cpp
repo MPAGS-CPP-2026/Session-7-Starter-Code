@@ -1,3 +1,4 @@
+
 #include "ProcessCommandLine.hpp"
 
 #include <iostream>
@@ -7,7 +8,7 @@
 bool processCommandLine(const std::vector<std::string>& cmdLineArgs,
                         bool& helpRequested, bool& versionRequested,
                         std::string& inputFile, std::string& outputFile,
-                        bool& encrypt)
+                        bool& encrypt, std::string& cipherkey)
 {
     // Status flag to indicate whether or not the parsing was successful
     bool processStatus{true};
@@ -26,41 +27,52 @@ bool processCommandLine(const std::vector<std::string>& cmdLineArgs,
             break;
         } else if (cmdLineArgs[i] == "-i") {
             // Handle input file option
-            // Next element is filename unless "-i" is the last argument
             if (i == nCmdLineArgs - 1) {
                 std::cerr << "[error] -i requires a filename argument"
                           << std::endl;
-                // Set the flag to indicate the error and terminate the loop
                 processStatus = false;
                 break;
             } else {
-                // Got filename, so assign value and advance past it
                 inputFile = cmdLineArgs[i + 1];
                 ++i;
             }
         } else if (cmdLineArgs[i] == "-o") {
             // Handle output file option
-            // Next element is filename unless "-o" is the last argument
             if (i == nCmdLineArgs - 1) {
                 std::cerr << "[error] -o requires a filename argument"
                           << std::endl;
-                // Set the flag to indicate the error and terminate the loop
+
                 processStatus = false;
                 break;
             } else {
-                // Got filename, so assign value and advance past it
                 outputFile = cmdLineArgs[i + 1];
                 ++i;
             }
         } else if (cmdLineArgs[i] == "--encrypt") {
+            // Select encryption mode
             encrypt = true;
         } else if (cmdLineArgs[i] == "--decrypt") {
+            // Select decryption mode
             encrypt = false;
+        } else if (cmdLineArgs[i] == "--key") {
+            // Handle cipher key option
+            if (i == nCmdLineArgs - 1) {
+                std::cerr << "[error] --key requires a key argument"
+                          << std::endl;
+
+                processStatus = false;
+                break;
+            } else {
+                // Got key, so assign value and advance past it
+                cipherkey = cmdLineArgs[i + 1];
+                ++i;
+            }
+
         } else {
-            // Have encoutered an unknown flag, output an error message,
-            // set the flag to indicate the error and terminate the loop
+            // Handle unknown command-line argument
             std::cerr << "[error] unknown argument '" << cmdLineArgs[i]
                       << "'\n";
+
             processStatus = false;
             break;
         }
